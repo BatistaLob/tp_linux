@@ -349,4 +349,62 @@ success
 
 Dec 08 15:30:58 vmlinux systemd[1]: Started Super netcat tout fou.
 ```
+sur ma VM 
+```
+[elbatista@vmlinux system]$ nc -l 8543
+coucou
+fdhgsjcxbvchs
+egsxbsbwx
+^C
+```
+sur mon PC
+```
+C:\Users\lucas\netcat-1.11>nc 10.4.1.4 8543
+coucou
+fdhgsjcxbvchs
+egsxbsbwx
 
+```
+
+####  Les logs de votre service
+
+```
+[elbatista@vmlinux system]$ sudo journalctl -xe -u tp2_nc -f
+Dec 08 15:30:58 vmlinux systemd[1]: Started Super netcat tout fou.
+░░ Subject: A start job for unit tp2_nc.service has finished successfully
+░░ Defined-By: systemd
+░░ Support: https://access.redhat.com/support
+░░
+░░ A start job for unit tp2_nc.service has finished successfully.
+░░
+░░ The job identifier is 7186.
+^C
+
+```
+
+#### Affiner la définition du service
+```
+[elbatista@vmlinux system]$ sudo nano tp2_nc.service
+[elbatista@vmlinux system]$ sudo cat tp2_nc.service
+[Unit]
+Description=Super netcat tout fou
+
+[Service]
+ExecStart=/usr/bin/nc -l 8543
+Restart=always
+[elbatista@vmlinux system]$ sudo systemctl daemon-reload
+
+sur ma VM après quelques minutes d'attentes 
+[elbatista@vmlinux system]$ nc -l 8543
+qxhc
+sde
+zd
+
+sur mon pc après quelques minutes d'attentes 
+C:\Users\lucas\netcat-1.11>nc 10.4.1.4 8543
+qxhc
+sde
+zd
+
+^C
+```
