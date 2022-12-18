@@ -49,7 +49,7 @@ elbatista@10.4.1.5's password:
 idcard.sh
 ```
 
-Le fichier [idcard](idcard.sh)
+[Le fichier idcard](idcard.sh)
 
 
 ## II. Script youtube-dl
@@ -58,9 +58,9 @@ Le fichier [idcard](idcard.sh)
 Video https://www.youtube.com/watch?v=hNXD7XWWo4o was downloaded.
 File path :/home/elbatista/srv/yt/downloads/YAAAAA meme
 ```
-le fichier scrpit [script](yt.sh)
+[le fichier script](yt.sh)
 
-le fichier log [download](download.log)
+[le fichier log](download.log)
 
 
 ## III. MAKE IT A SERVICE
@@ -101,7 +101,7 @@ Dec 18 11:12:49 localhost sudo[648]: Video https://www.youtube.com/watch?v=Wch3g
 Dec 18 11:12:49 localhost sudo[648]: File path : /home/elbatista/srv/yt/downloads/1 Second Video/1 Second Video.mp4
 ```
 
-le fichier script [script](yt-v2.sh)
-le fichier service [service](yt.service)
+[le fichier script](yt-v2.sh)
+[le fichier service](yt.service)
 
 
