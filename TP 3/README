@@ -59,6 +59,7 @@ Video https://www.youtube.com/watch?v=hNXD7XWWo4o was downloaded.
 File path :/home/elbatista/srv/yt/downloads/YAAAAA meme
 ```
 le fichier scrpit [script](yt.sh)
+
 le fichier log [download](download.log)
 
 
@@ -83,7 +84,7 @@ Dec 18 11:11:17 localhost sudo[407]:     root : PWD=/ ; USER=root ; COMMAND=/usr
 Dec 18 11:11:17 localhost sudo[407]: pam_unix(sudo:session): session opened for user root(uid=0) by (uid=0)
 Dec 18 11:13:49 localhost sudo[648]: Video https://www.youtube.com/watch?v=Wch3gJG2GJ4 was downloaded.
 Dec 18 11:13:49 localhost sudo[648]: File path : /home/elbatista/srv/yt/downloads/1 Second Video/1 Second Video.mp4
-[elbatista@localhost system]$journalctl -xe -u yt
+[elbatista@localhost system]$ journalctl -xe -u yt
 [...]
 -- Boot 50037b85a2574849b16c71ff5aaf37ed --
 Dec 18 11:11:16 localhost systemd[1]: Started Youtube downloader.
@@ -96,7 +97,11 @@ Dec 18 11:11:16 localhost systemd[1]: Started Youtube downloader.
 ░░ The job identifier is 113.
 Dec 18 11:11:17 localhost sudo[407]:     root : PWD=/ ; USER=root ; COMMAND=/usr/bin/bash /home/elbatista/srv/yt/yt-v2.sh
 Dec 18 11:11:17 localhost sudo[407]: pam_unix(sudo:session): session opened for user root(uid=0) by (uid=0)
-Nov 19 23:13:49 localhost sudo[648]: Video https://www.youtube.com/watch?v=Wch3gJG2GJ4 was downloaded.
-Nov 19 23:13:49 localhost sudo[648]: File path : /home/elbatista/srv/yt/downloads/1 Second Video/1 Second Video.mp4
+Dec 18 11:12:49 localhost sudo[648]: Video https://www.youtube.com/watch?v=Wch3gJG2GJ4 was downloaded.
+Dec 18 11:12:49 localhost sudo[648]: File path : /home/elbatista/srv/yt/downloads/1 Second Video/1 Second Video.mp4
 ```
+
+le fichier script [script](yt-v2.sh)
+le fichier service [service](yt.service)
+
 
