@@ -324,13 +324,16 @@ public (active)
 
 ```
 lucas@LAPTOP-GEJ2DKFJ MINGW64 ~
-$   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+$ curl 10.1.2.11:8080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100  11  100  11    0     0  11673      0 --:--:-- --:--:-- --:--:-- 1555
 
 bidon 
+
 lucas@LAPTOP-GEJ2DKFJ MINGW64 ~
-$   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+$ curl 10.1.2.11:8888  
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100  12  100  12    0     0  11753      0 --:--:-- --:--:-- --:--:-- 1600
 
