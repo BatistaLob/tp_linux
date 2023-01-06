@@ -1,0 +1,125 @@
+# TP5 : Self-hosted cloud
+## Partie 1 : Mise en place et maîtrise du serveur Web
+
+### Installer le serveur Apache
+```
+[elbatista@localhost ~]$ sudo dnf update -y
+[elbatista@localhost ~]$ sudo dnf install httpd
+
+```
+
+###  Démarrer le service Apache
+
+```
+
+[elbatista@localhost ~]$ sudo systemctl start httpd
+[elbatista@localhost ~]$ sudo systemctl enable httpd
+Created symlink /etc/systemd/system/multi-user.target.wants/httpd.service → /usr/lib/systemd/system/httpd.service.
+[elbatista@localhost ~]$ systemctl status httpd
+● httpd.service - The Apache HTTP Server
+     Loaded: loaded (/usr/lib/systemd/system/httpd.service; enabled; ve>
+     Active: active (running) since Tue 2023-01-03 15:14:05 CET; 21s ago
+       Docs: man:httpd.service(8)
+   Main PID: 38460 (httpd)
+     Status: "Total requests: 0; Idle/Busy workers 100/0;Requests/sec: >
+      Tasks: 213 (limit: 5904)
+     Memory: 25.1M
+        CPU: 111ms
+     CGroup: /system.slice/httpd.service
+             ├─38460 /usr/sbin/httpd -DFOREGROUND
+             ├─38461 /usr/sbin/httpd -DFOREGROUND
+             ├─38462 /usr/sbin/httpd -DFOREGROUND
+             ├─38463 /usr/sbin/httpd -DFOREGROUND
+             └─38464 /usr/sbin/httpd -DFOREGROUND
+
+Jan 03 15:14:05 localhost.localdomain systemd[1]: Starting The Apache H>
+Jan 03 15:14:05 localhost.localdomain httpd[38460]: AH00558: httpd: Cou>
+Jan 03 15:14:05 localhost.localdomain httpd[38460]: Server configured, >
+Jan 03 15:14:05 localhost.localdomain systemd[1]: Started The Apache HT>
+[elbatista@localhost ~]$ sudo ss -lantpu | grep httpd
+
+tcp   LISTEN 0      511                   *:80              *:*     users:(("httpd",pid=38464,fd=4),("httpd",pid=38463,fd=4),("httpd",pid=38462,fd=4),("httpd",pid=38460,fd=4))
+[elbatista@localhost ~]$ sudo firewall-cmd --zone=public --permanent --add-port=80/tcp
+success
+[elbatista@localhost ~]$ sudo firewall-cmd --zone=public --permanent --add-port=443/tcp
+success
+[elbatista@localhost ~]$ sudo firewall-cmd --reload
+success
+
+```
+
+### TEST
+
+```
+[elbatista@localhost ~]$ curl localhost | head -10
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>HTTP Server Test Page powered by: Rocky Linux</title>
+    <style type="text/css">
+      /*<![CDATA[*/
+
+      html {
+
+
+lucas@LAPTOP-GEJ2DKFJ MINGW64 ~
+$ curl http://10.105.1.11/ |head -10
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  7620  100  7620    0     0  4526k      0 --:--:-- --:--:-- --:--:-- 7441k
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>HTTP Server Test Page powered by: Rocky Linux</title>
+    <style type="text/css">
+      /*<![CDATA[*/
+
+      html {
+
+```
+### Le service Apache...
+
+```
+[elbatista@localhost etc]$ systemctl cat httpd | tail -10
+ExecStart=/usr/sbin/httpd $OPTIONS -DFOREGROUND
+ExecReload=/usr/sbin/httpd $OPTIONS -k graceful
+# Send SIGWINCH for graceful stop
+KillSignal=SIGWINCH
+KillMode=mixed
+PrivateTmp=true
+OOMPolicy=continue
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### Déterminer sous quel utilisateur tourne le processus Apache
+```
+[elbatista@localhost httpd]$ sudo cat /etc/httpd/conf/httpd.conf | grep apache
+User apache
+Group apache
+    # http://httpd.apache.org/docs/2.4/mod/core.html#options
+[elbatista@localhost httpd]$ ps -ef | grep httpd
+root       38460       1  0 15:14 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache     38461   38460  0 15:14 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache     38462   38460  0 15:14 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache     38463   38460  0 15:14 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache     38464   38460  0 15:14 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+apache     38766   38460  0 15:29 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+[elbatista@localhost httpd]$ cd /usr/share/testpage/
+[elbatista@localhost testpage]$ ls -al
+total 12
+drwxr-xr-x.  2 root root   24 Jan  3 15:08 .
+drwxr-xr-x. 83 root root 4096 Jan  3 15:08 ..
+-rw-r--r--.  1 root root 7620 Jul 27 20:05 index.html
+```
+
+### Changer l'utilisateur utilisé par Apache
+
+```
+
+```
