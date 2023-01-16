@@ -36,6 +36,9 @@ Jan 03 15:14:05 localhost.localdomain systemd[1]: Starting The Apache H>
 Jan 03 15:14:05 localhost.localdomain httpd[38460]: AH00558: httpd: Cou>
 Jan 03 15:14:05 localhost.localdomain httpd[38460]: Server configured, >
 Jan 03 15:14:05 localhost.localdomain systemd[1]: Started The Apache HT>
+[elbatista@localhost ~]$ sudo systemctl is-enabled httpd
+[sudo] password for elbatista:
+enabled
 [elbatista@localhost ~]$ sudo ss -lantpu | grep httpd
 
 tcp   LISTEN 0      511                   *:80              *:*     users:(("httpd",pid=38464,fd=4),("httpd",pid=38463,fd=4),("httpd",pid=38462,fd=4),("httpd",pid=38460,fd=4))
@@ -121,5 +124,426 @@ drwxr-xr-x. 83 root root 4096 Jan  3 15:08 ..
 ### Changer l'utilisateur utilisé par Apache
 
 ```
+[elbatista@localhost ~]$ sudo useradd lucas -s /sbin/nologin -u 6969 -d /usr/share/httpd -p root
+[elbatista@localhost ~]$ sudo cat /etc/passwd | tail -2
+apache:x:48:48:Apache:/usr/share/httpd:/sbin/nologin
+lucas:x:6969:6970::/usr/share/httpd:/sbin/nologin
+[elbatista@localhost ~]$ sudo nano /etc/httpd/conf/httpd.conf
+[elbatista@localhost ~]$ sudo cat /etc/httpd/conf/httpd.conf | grep lucas
+User lucas
+Group lucas
+[elbatista@localhost ~]$ sudo systemctl restart httpd
+[elbatista@localhost ~]$ systemctl status httpd
+● httpd.service - The Apache HTTP Server
+     Loaded: loaded (/usr/lib/systemd/system/httpd.service; enabled; ve>     Active: active (running) since Mon 2023-01-09 09:16:54 CET; 33s ago       Docs: man:httpd.service(8)
+   Main PID: 1487 (httpd)
+     Status: "Total requests: 0; Idle/Busy workers 100/0;Requests/sec: >      Tasks: 213 (limit: 4631)
+     Memory: 40.8M
+        CPU: 80ms
+     CGroup: /system.slice/httpd.service
+             ├─1487 /usr/sbin/httpd -DFOREGROUND
+             ├─1488 /usr/sbin/httpd -DFOREGROUND
+             ├─1489 /usr/sbin/httpd -DFOREGROUND
+             ├─1490 /usr/sbin/httpd -DFOREGROUND
+             └─1491 /usr/sbin/httpd -DFOREGROUND
 
+Jan 09 09:16:54 localhost.localdomain systemd[1]: Starting The Apache H>Jan 09 09:16:54 localhost.localdomain httpd[1487]: AH00558: httpd: Coul>Jan 09 09:16:54 localhost.localdomain httpd[1487]: Server configured, l>Jan 09 09:16:54 localhost.localdomain systemd[1]: Started The Apache HT>
+[elbatista@localhost ~]$ ps -ef | grep lucas
+lucas       1488    1487  0 09:16 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+lucas       1489    1487  0 09:16 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+lucas       1490    1487  0 09:16 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+lucas       1491    1487  0 09:16 ?        00:00:00 /usr/sbin/httpd -DFOREGROUND
+elbatis+    1706    1410  0 09:17 pts/0    00:00:00 grep --color=auto lucas
+```
+
+### Faites en sorte que Apache tourne sur un autre port
+
+```
+[elbatista@localhost ~]$ sudo nano /etc/httpd/conf/httpd.conf
+[elbatista@localhost ~]$ sudo cat /etc/httpd/conf/httpd.conf | grep Listen
+Listen 8080
+[elbatista@localhost ~]$  sudo firewall-cmd --zone=public --permanent --add-port=8080/tcp
+success
+[elbatista@localhost ~]$ sudo firewall-cmd --reload
+success
+[elbatista@localhost ~]$ sudo systemctl restart httpd
+[elbatista@localhost ~]$ systemctl status httpd
+● httpd.service - The Apache HTTP Server
+     Loaded: loaded (/usr/lib/systemd/system/httpd.service; enabled; ve>
+     Active: active (running) since Mon 2023-01-09 09:21:51 CET; 5s ago
+       Docs: man:httpd.service(8)
+   Main PID: 1741 (httpd)
+     Status: "Started, listening on: port 8080"
+      Tasks: 213 (limit: 4631)
+     Memory: 22.9M
+        CPU: 43ms
+     CGroup: /system.slice/httpd.service
+             ├─1741 /usr/sbin/httpd -DFOREGROUND
+             ├─1743 /usr/sbin/httpd -DFOREGROUND
+             ├─1744 /usr/sbin/httpd -DFOREGROUND
+             ├─1745 /usr/sbin/httpd -DFOREGROUND
+             └─1746 /usr/sbin/httpd -DFOREGROUND
+
+Jan 09 09:21:51 localhost.localdomain systemd[1]: Starting The Apache H>
+Jan 09 09:21:51 localhost.localdomain httpd[1741]: AH00558: httpd: Coul>
+Jan 09 09:21:51 localhost.localdomain httpd[1741]: Server configured, l>
+Jan 09 09:21:51 localhost.localdomain systemd[1]: Started The Apache HT>
+lines 1-20/20 (END)
+[elbatista@localhost ~]$ sudo ss -lnaptu | grep 8080
+tcp   LISTEN 0      511                   *:8080            *:*     users:(("httpd",pid=1746,fd=4),("httpd",pid=1745,fd=4),("httpd",pid=1744,fd=4),("httpd",pid=1741,fd=4))
+[elbatista@localhost ~]$ curl localhost:8080 | head -10
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--100  7620  100  7620    0     0  1488k      0 --:--:-- --:--:-- --:--:-- 1488k
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>HTTP Server Test Page powered by: Rocky Linux</title>
+    <style type="text/css">
+      /*<![CDATA[*/
+
+      html {
+lucas@LAPTOP-GEJ2DKFJ MINGW64 ~
+$ curl 10.105.1.11:8080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>HTTP Server Test Page powered by: Rocky Linux</title>
+    <style type="text/css">
+      /*<![CDATA[*/
+
+      html {
+        height: 100%;
+        width: 100%;
+      }
+        body {
+
+```
+
+Fichier [/etc/httpd/conf/httpd.conf](httpd.conf)
+
+# Partie 2 : Mise en place et maîtrise du serveur de base de données
+
+### Install de MariaDB sur db.tp5.linux
+```
+
+[elbatista@db ~]$ sudo dnf install mariadb-server
+[...]
+Complete!
+[elbatista@db ~]$ sudo systemctl enable mariadb
+Created symlink /etc/systemd/system/mysql.service → /usr/lib/systemd/system/mariadb.service.
+Created symlink /etc/systemd/system/mysqld.service → /usr/lib/systemd/system/mariadb.service.
+Created symlink /etc/systemd/system/multi-user.target.wants/mariadb.service → /usr/lib/systemd/system/mariadb.service.
+[elbatista@db ~]$ sudo systemctl start mariadb
+[elbatista@db ~]$ sudo mysql_secure_installation
+[elbatista@db ~]$ sudo systemctl is-enabled mariadb
+enabled
+```
+
+### Port utilisé par MariaDB
+
+```
+[elbatista@db ~]$ ss -lnaptu | grep 3306
+tcp   LISTEN 0      80                    *:3306            *:*
+[elbatista@db ~]$ sudo firewall-cmd --add-port=3306/tcp --permanent
+success
+[elbatista@db ~]$ sudo firewall-cmd --reload
+success
+[elbatista@db ~]$ sudo ps -ef | grep mariadb
+mysql      35537       1  0 09:51 ?        00:00:00 /usr/libexec/mariad
+d --basedir=/usr
+elbatis+   35745     926  0 10:47 pts/0    00:00:00 grep --color=auto mariadb
+```
+
+# Partie 3 : Configuration et mise en place de NextCloud
+
+## 1. Base de données
+### Préparation de la base pour NextCloud
+```
+[elbatista@db ~]$ sudo mysql -u root -p
+Enter password:
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 15
+Server version: 10.5.16-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> CREATE USER 'nextcloud'@'10.105.1.11' IDENTIFIED BY 'pewpewpew';
+Query OK, 0 rows affected (0.002 sec)
+
+MariaDB [(none)]> CREATE DATABASE IF NOT EXISTS nextcloud CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+Query OK, 1 row affected (0.000 sec)
+
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextcloud'@'10.105.1.11';
+Query OK, 0 rows affected (0.003 sec)
+
+MariaDB [(none)]> FLUSH PRIVILEGES;
+Query OK, 0 rows affected (0.000 sec)
+```
+
+### Exploration de la base de données
+```
+[elbatista@web ~]$ dnf provides mysql
+Rocky Linux 9 - BaseOS                  1.3 MB/s | 1.7 MB     00:01
+Rocky Linux 9 - AppStream               6.8 MB/s | 6.4 MB     00:00
+Rocky Linux 9 - Extras                   17 kB/s | 8.5 kB     00:00
+mysql-8.0.30-3.el9_0.x86_64 : MySQL client programs and shared libraries
+Repo        : appstream
+Matched from:
+Provide    : mysql = 8.0.30-3.el9_0
+[elbatista@web ~]$ mysql -u nextcloud -D nextcloud -h 10.105.1.12 -p
+Enter password:
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 17
+Server version: 10.5.16-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+MariaDB [nextcloud]> SHOW DATABASES;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| nextcloud          |
++--------------------+
+2 rows in set (0.001 sec)
+
+MariaDB [nextcloud]> USE nextcloud
+Database changed
+MariaDB [nextcloud]> SHOW TABLES;
+Empty set (0.001 sec)
+
+```
+
+### Trouver une commande SQL qui permet de lister tous les utilisateurs de la base de données
+
+```
+MariaDB [(none)]> select user from mysql.user;
++-------------+
+| User        |
++-------------+
+| nextcloud   |
+| mariadb.sys |
+| mysql       |
+| root        |
++-------------+
+4 rows in set (0.001 sec)
+```
+## 2. Serveur Web et NextCloud
+
+```
+[elbatista@web ~]$ sudo nano /etc/httpd/conf/httpd.conf
+[elbatista@web ~]$ sudo systemctl restart httpd
+[elbatista@web ~]$ sudo firewall-cmd --zone=public --permanent --add-port=80/tcp
+success
+[elbatista@web ~]$  sudo firewall-cmd --reload
+success
+```
+
+###  Install de PHP
+
+```
+[elbatista@web ~]$ sudo dnf config-manager --set-enabled crb
+[elbatista@web ~]$ sudo dnf install dnf-utils http://rpms.remirepo.net/enterprise/remi-release-9.rpm -y
+[...]
+Complete!
+[elbatista@web ~]$ dnf module list php
+[elbatista@web ~]$  sudo dnf module enable php:remi-8.1 -y
+[elbatista@web ~]$ sudo dnf install -y php81-php
+```
+
+###  Install de tous les modules PHP nécessaires pour NextCloud
+
+```
+[elbatista@web ~]$ sudo dnf install -y libxml2 openssl php81-php php81-php-ctype php81-php-curl php81-php-gd php81-php-iconv php81-php-json php81-php-libxml php81-php-mbstring php81-php-openssl php81-php-posix php81-php-session php81-php-xml php81-php-zip php81-php-zlib php81-php-pdo php81-php-mysqlnd php81-php-intl php81-php-bcmath php81-php-gmp
+[...]
+Complete!
+```
+###  Récupérer NextCloud
+
+```
+[elbatista@web ~]$ cd /var/www/
+[elbatista@web www]$ sudo mkdir tp5_nextcloud
+[elbatista@web ~]$ curl -SLO https://download.nextcloud.com/server/prereleases/nextcloud-25.0.0rc3.zip
+[elbatista@web ~]$ unzip nextcloud-25.0.0rc3.zip
+[elbatista@web tp5_nextcloud]$ sudo mv nextcloud/* /var/www/tp5_nextcloud/
+[elbatista@web tp5_nextcloud]$ ls -al | grep index.html
+-rw-r--r--.  1 elbatista elbatista   156 Oct  6 14:42 index.html
+[elbatista@web ~]$ sudo chown -R apache:apache /var/www/tp5_nextcloud/
+[elbatista@web www]$ ls -al | grep tp5_nextcloud
+drwxr-xr-x. 14 apache apache 4096 Jan  9 12:03 tp5_nextcloud
+```
+
+### Adapter la configuration d'Apache
+
+```
+[elbatista@web ~]$ sudo cat /etc/httpd/conf/httpd.conf | tail -1
+IncludeOptional conf.d/*.conf
+[elbatista@web conf.d]$ sudo touch website.conf
+[elbatista@web conf.d]$ sudo cat website.conf
+<VirtualHost *:80>
+  # on indique le chemin de notre webroot
+  DocumentRoot /var/www/tp5_nextcloud/
+  # on précise le nom que saisissent les clients pour accéder au service
+  ServerName  web.tp5.linux
+
+  # on définit des règles d'accès sur notre webroot
+  <Directory /var/www/tp5_nextcloud/>
+    Require all granted
+    AllowOverride All
+    Options FollowSymLinks MultiViews
+    <IfModule mod_dav.c>
+      Dav off
+    </IfModule>
+  </Directory>
+</VirtualHost>
+```
+
+### Redémarrer le service Apache
+
+```
+[elbatista@web conf.d]$ sudo systemctl restart httpd
+[elbatista@web conf.d]$ sudo systemctl status httpd
+● httpd.service - The Apache HTTP Server
+     Loaded: loaded (/usr/lib/systemd/system/httpd.service; enabled; ve>
+    Drop-In: /usr/lib/systemd/system/httpd.service.d
+             └─php81-php-fpm.conf
+     Active: active (running) since Mon 2023-01-09 12:22:09 CET; 54s ago
+```
+## 3. Finaliser l'installation de NextCloud
+```
+[elbatista@web ~]$ mysql -u nextcloud -D nextcloud -h 10.105.1.12 -p
+Enter password:
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 22
+Server version: 10.5.16-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [nextcloud]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| nextcloud          |
++--------------------+
+2 rows in set (0.001 sec)
+
+MariaDB [nextcloud]> use nextcloud;
+Database changed
+MariaDB [nextcloud]> show tables;
++-----------------------------+
+| Tables_in_nextcloud         |
++-----------------------------+
+| oc_accounts                 |
+| oc_accounts_data            |
+| oc_activity                 |
+| oc_activity_mq              |
+| oc_addressbookchanges       |
+| oc_addressbooks             |
+| oc_appconfig                |
+| oc_authorized_groups        |
+| oc_authtoken                |
+| oc_bruteforce_attempts      |
+| oc_calendar_invitations     |
+| oc_calendar_reminders       |
+| oc_calendar_resources       |
+| oc_calendar_resources_md    |
+| oc_calendar_rooms           |
+| oc_calendar_rooms_md        |
+| oc_calendarchanges          |
+| oc_calendarobjects          |
+| oc_calendarobjects_props    |
+| oc_calendars                |
+| oc_calendarsubscriptions    |
+| oc_cards                    |
+| oc_cards_properties         |
+| oc_circles_circle           |
+| oc_circles_event            |
+| oc_circles_member           |
+| oc_circles_membership       |
+| oc_circles_mount            |
+| oc_circles_mountpoint       |
+| oc_circles_remote           |
+| oc_circles_share_lock       |
+| oc_circles_token            |
+| oc_collres_accesscache      |
+| oc_collres_collections      |
+| oc_collres_resources        |
+| oc_comments                 |
+| oc_comments_read_markers    |
+| oc_dav_cal_proxy            |
+| oc_dav_shares               |
+| oc_direct_edit              |
+| oc_directlink               |
+| oc_federated_reshares       |
+| oc_file_locks               |
+| oc_file_metadata            |
+| oc_filecache                |
+| oc_filecache_extended       |
+| oc_files_trash              |
+| oc_flow_checks              |
+| oc_flow_operations          |
+| oc_flow_operations_scope    |
+| oc_group_admin              |
+| oc_group_user               |
+| oc_groups                   |
+| oc_jobs                     |
+| oc_known_users              |
+| oc_login_flow_v2            |
+| oc_migrations               |
+| oc_mimetypes                |
+| oc_mounts                   |
+| oc_notifications            |
+| oc_notifications_pushhash   |
+| oc_notifications_settings   |
+| oc_oauth2_access_tokens     |
+| oc_oauth2_clients           |
+| oc_photos_albums            |
+| oc_photos_albums_files      |
+| oc_photos_collaborators     |
+| oc_preferences              |
+| oc_privacy_admins           |
+| oc_profile_config           |
+| oc_properties               |
+| oc_ratelimit_entries        |
+| oc_reactions                |
+| oc_recent_contact           |
+| oc_schedulingobjects        |
+| oc_share                    |
+| oc_share_external           |
+| oc_storages                 |
+| oc_storages_credentials     |
+| oc_systemtag                |
+| oc_systemtag_group          |
+| oc_systemtag_object_mapping |
+| oc_text_documents           |
+| oc_text_sessions            |
+| oc_text_steps               |
+| oc_trusted_servers          |
+| oc_twofactor_backupcodes    |
+| oc_twofactor_providers      |
+| oc_user_status              |
+| oc_user_transfer_owner      |
+| oc_users                    |
+| oc_vcategory                |
+| oc_vcategory_to_object      |
+| oc_webauthn                 |
+| oc_whats_new                |
++-----------------------------+
+95 rows in set (0.001 sec)
 ```
