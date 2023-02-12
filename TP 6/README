@@ -151,10 +151,71 @@ Durée approximative des boucles en millisecondes :
 ```
 
 ```
+# Module 2 : Sauvegarde du système de fichiers
+## I. Script de backup
+###  Ecrire le script bash
+```
+[elbatista@web srv]$ sudo dnf install rsync
+[elbatista@web srv]$ sudo dnf install zip
+[elbatista@web srv]$ sudo mkdir backup
+[elbatista@web srv]$ sudo useradd backup -d /srv/backup/ -s /usr/bin/nologin -u 1999
+[elbatista@web srv]$ ls -l
+total 4
+drwxr-xr-x. 2 backup root  43 Jan 17 20:08 backup
+-rw-r--r--. 1 root   root 579 Jan 17 20:09 tp6_backup.sh
+[elbatista@web srv]$ sudo cat tp6_backup.sh 
+#!/bin/bash
+
+#Script written in February 2023 by elbatista
+#It was created to save the main nextcloud files and database. 
+
+backup_directory=/srv/backup/nextcloud-dirbkp_`date +"%Y%m%d"`
+
+
+#Backup files
+rsync -Aavx /var/www/tp5_nextcloud/ $backup_directory/
+
+#Backup database
+mysqldump --skip-column-statistics --single-transaction --default-character-set=utf8mb4 -h 172.16.72.12 -u nextcloud -ppewpewpew nextcloud > $backup_directory/nextcloud-sqlbkp_`date +"%Y%m%d"`.bak
+
+#Zip folder
+zip -r $backup_directory.zip $backup_directory
+
+#Remove folder
+rm -rf $backup_directory
+
+```
+## 3. Service et timer
+###  Créez un service
+```
+[elbatista@web system]$ sudo cat backup.service 
+[Unit]
+Description=Backup service
+
+[Service]
+ExecStart=sh /srv/tp6_backup.sh
+User=backup
+Type=oneshot
+[elbatista@web system]$ sudo systemctl status backup.service 
+○ backup.service - Backup service
+     Loaded: loaded (/etc/systemd/system/backup.service; static)
+     Active: inactive (dead)
+
+Feb 6 22:30:15 web.linux.tp5 sh[1821]: apps/circles/lib/Search/LocalUsers.php
+Feb 6 22:30:15 web.linux.tp5 sh[1821]: apps/circles/lib/Search/UnifiedSearchProvider.php
+Feb 6 22:30:15 web.linux.tp5 sh[1821]: apps/circles/lib/Search/UnifiedSearchResult.php
+Feb 6 22:30:15 web.linux.tp5 sh[1821]: apps/circles/lib/Service/
+Feb 6 22:30:15 web.linux.tp5 sh[1821]: apps/circles/lib/Service/CircleService.php
+Feb 6 22:30:15 web.linux.tp5 sh[1821]: apps/circles/lib/Service/CirclesService.php
+Feb 6 22:30:15 web.linux.tp5 sh[1821]: apps/circles/lib/Service/ConfigService.php
+Feb 6 22:30:26 web.linux.tp5 systemd[1]: backup.service: Deactivated successfully.
+Feb 6 22:30:26 web.linux.tp5 systemd[1]: Finished Backup service.
+Feb 6 22:30:26 web.linux.tp5 systemd[1]: backup.service: Consumed 13.510s CPU time.
+```
+
 
 # Module 3 : Fail2Ban
 ## Faites en sorte que 
-
 ```
 [elbatista@db fail2ban]$ sudo cat jail.local | grep maxretry
 # A host is banned if it has generated "maxretry" during the last "findtime"
@@ -280,7 +341,7 @@ SEND_DISCORD="YES"
 
 # Create a webhook by following the official documentation -
 # https://support.discordapp.com/hc/en-us/articles/228383668-Intro-to-Webhooks
-DISCORD_WEBHOOK_URL="https://discordapp.com/api/webhooks/XXXXXXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1065194940486926376/1qS6MY4-RWJlT6UW_0j2XO_d0SCacO29HGgGJGErnBF8jIijFinzvDTjbcD4yVM4YUYW"
 
 # if a role's recipients are not configured, a notification will be send to
 # this discord channel (empty = do not send a notification for unconfigured
@@ -290,5 +351,26 @@ DEFAULT_RECIPIENT_DISCORD="alarms"
 
 ### Vérifier que les alertes fonctionnent
 ```
-[elbatista@db ~]$  bash -x /usr/libexec/netdata/plugins.d/alarm-notify.sh test
+[elbatista@web ~]$ sudo dnf install stress
+[elbatista@web netdata]$ sudo cat health.d/cpu.conf | head -n 10
+
+# you can disable an alarm notification by setting the 'to' line to: silent
+
+ template: 10min_cpu_usage
+       on: system.cpu
+    class: Utilization
+     type: System
+component: CPU
+       os: linux
+    hosts: *
+[elbatista@web netdata]$ sudo cat health.d/cpu_usage.conf 
+alarm: cpu_usage
+on: system.cpu
+lookup : average -3s percentage foreach user,system
+units: %
+every: 10s
+warn: $this > 50
+crit: $this > 80
+[elbatista@web netdata]$ sudo stress --cpu 8 --io 4 --vm 2 --vm-bytes 128M --timeout 10s
+
 ```
